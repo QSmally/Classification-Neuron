@@ -5,7 +5,7 @@ RUN brew update && brew install zig
 
 WORKDIR /build
 COPY . /build
-RUN zig build
+RUN zig build -Drelease-safe
 
 FROM ubuntu:20.04 AS output
 

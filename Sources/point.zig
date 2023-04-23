@@ -31,10 +31,10 @@ test "min prediction" {
     const point = Point { .x = 255, .y = 255 };
     const prediction = point.group_from(.{ -0.5, -0.5, -0.5 });
     try std.testing.expectEqual(prediction, 0);
-}    
+}
 
 test "max prediction" {
     const point = Point { .x = 255, .y = 255 };
     const prediction = point.group_from(.{ 0.5, 0.5, 0.5 });
     try std.testing.expectEqual(prediction, 1);
-}    
+}
