@@ -5,3 +5,6 @@
 # File editor
 Session.vim
 *.swp
+
+# Compiler artifacts
+zig-*
