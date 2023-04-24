@@ -29,12 +29,14 @@ fn command_help() !void {
     const message =
         \\Classification Neuron - split graphs into two sections by training weights from a dataset.
         \\
+        \\Implements the linear regression algorithm.
+        \\
         \\USAGE
         \\  classifier [command] [arguments...]
         \\  classifier [command] [arguments...] > [output file]
         \\
         \\COMMANDS
-        \\  classifier train [dataset] > [output weights]   trains from an annotated file of points, outputs weights (to store with I/O redirection)
+        \\  classifier train [dataset] > [output weights]   trains from an annotated file of points, prints the weights (to store with I/O redirection)
         \\  classifier test [dataset] [weights]             runs an annotated dataset through a weights file to see training accuracy in stdout
         \\  classifier run [points] [weights]               runs a non-annotated (directory of) set(s) through a weights file and writes the results
     ;
@@ -57,12 +59,15 @@ fn command_train(args: [][]const u8) !void {
 
     // Mark: training
     var trainer = Trainer.init_random(4096);
-    std.debug.print("init trainer instance with max_iter={}, start... ", .{ trainer.max_iterations });
+    std.debug.print("init trainer instance with max_iter={}, start...\n", .{ trainer.max_iterations });
 
     const iterations = trainer.train(points);
-    std.debug.print("done\ntraining took {} iterations (writing weights to stdout...)\n", .{ iterations });
+    if (iterations == trainer.max_iterations)
+        std.debug.print("warning! iter=max_iter which likely means the dataset is invalid (couldn't perform linear regression)\n", .{});
+    std.debug.print("done! training took {} iterations (writing weights to stdout...)\n", .{ iterations });
+
     try std.json.stringify(trainer.weights, .{}, stdout);
-    std.debug.print("\nexit: success\n", .{});
+    std.debug.print("\nexit: no errors\n", .{});
 }
 
 fn command_test(args: [][]const u8) !void {
@@ -88,7 +93,8 @@ fn command_test(args: [][]const u8) !void {
 
     allocator.free(weights_string);
     defer allocator.free(weights);
-    std.debug.print("parsed weights file\nvalidating each point with its annotated group...\n", .{});
+    std.debug.print("parsed weights file (output of 255 means unannotated point)\n", .{});
+    std.debug.print("validating each point with its annotated group...\n", .{});
 
     // Mark: run through points
     for (points) |point| {
@@ -96,7 +102,7 @@ fn command_test(args: [][]const u8) !void {
         const annotated_group = point.group orelse 255;
         const message = if (group == annotated_group) "CORRECT" else "FAULT";
 
-        try stdout.print("Point({}, {}) = {}, annotated {} ({s})\n", .{
+        try stdout.print("Point({}, {}): calculated = {}, annotated = {} ({s})\n", .{
             point.x,
             point.y,
             group,
@@ -104,7 +110,7 @@ fn command_test(args: [][]const u8) !void {
             message });
     }
 
-    std.debug.print("\nexit: done\n", .{});
+    std.debug.print("\nexit: no errors\n", .{});
 }
 
 fn command_run(args: [][]const u8) !void {

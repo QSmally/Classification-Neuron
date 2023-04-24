@@ -17,7 +17,19 @@ neuron% classifier # ...
 
 ```bash
 $ zig build
-$ ./zig-out/bin/classifier # ...
+$ ./zig-out/bin/classifier # <args...>
+```
+
+Or alternatively, use the run step of the build system:
+
+```bash
+$ zig build run -- # <args...>
+```
+
+# Tests
+
+```bash
+$ zig build test
 ```
 
 ## Usage
@@ -25,20 +37,14 @@ $ ./zig-out/bin/classifier # ...
 See the `Demo/` subdirectories for more information about the in-/output formats.
 
 * **Train**: trains from an `annotated.json` dataset and outputs a `weights.json` (W: uses I/O redirection)
-    - Generic interface: `classifier train <input/dataset.json> > <output/weights.json>`
+    - Generic interface: `classifier train [dataset.json] > [weights.json]`
     - Docker: `classifier train /mnt/dataset_0/annotated.json > /mnt/dataset_0/weights.json`
     - Native: `./zig-out/bin/classifier train ./Demo/dataset_0/annotated.json > ./Demo/dataset_0/weights.json`
 * **Test**: tests the generated `weights.json` on a particular annotated dataset
-    - Generic interface: `classifier test <input/dataset.json> <input/weights.json>`
-    - Docker: `classifier test /mnt/dataset_0/annotated_test.json /mnt/dataset_0/weights.json`
-    - Native: `./zig-out/bin/classifier test ./Demo/dataset_0/annotated_test.json ./Demo/dataset_0/weights.json`
+    - Generic interface: `classifier test [dataset.json] [weights.json]`
+    - Docker: `classifier test /mnt/dataset_0/annotated.json /mnt/dataset_0/weights.json`
+    - Native: `./zig-out/bin/classifier test ./Demo/dataset_0/annotated.json ./Demo/dataset_0/weights.json`
 * **Run**: runs the generated `weights.json` on a particular non-annotated set of inputs
-    - Generic interface: `classifier run <input/weights.json> <input/images/> <output/images/>`
-    - Docker: `classifier run /mnt/dataset_0/weights.json /mnt/inputs/ /mnt/outputs/`
-    - Native: `./zig-out/bin/classifier run ./Demo/dataset_0/weights.json ./Demo/inputs/ ./Demo/outputs/`
-
-# Test
-
-```bash
-$ zig test Sources/trainer.zig
-```
+    - Generic interface: `classifier run [weights.json] [inputs/]`, written to `inputs/outputs/`
+    - Docker: `classifier run /mnt/dataset_0/weights.json /mnt/inputs/`
+    - Native: `./zig-out/bin/classifier run ./Demo/dataset_0/weights.json ./Demo/inputs/`
