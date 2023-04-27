@@ -8,3 +8,9 @@ Session.vim
 
 # Compiler artifacts
 zig-*
+
+# Demo
+input.json
+prediction.json
+weights.json
+*.svg

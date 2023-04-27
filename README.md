@@ -27,7 +27,7 @@ Or alternatively, use the run step of the Zig build system:
 $ zig build run -- # <args...>
 ```
 
-# Tests
+## Tests
 
 Unit tests are included for the training implementation:
 
@@ -35,9 +35,11 @@ Unit tests are included for the training implementation:
 $ zig build test
 ```
 
-## Usage
+# Usage
 
 See `Demo/`, `Demo/dataset_0/` and `Demo/run/points_0/` for details about the in-/output formats.
+
+## Train model
 
 **Train**: from an annotated points (x/y/group) dataset, trains the model using linear regression
 and outputs the model weights to stdout.
@@ -49,6 +51,8 @@ $ classifier train dataset_0/annotated.json # dry run
 $ classifier train dataset_0/annotated.json > dataset/weights.json # save output
 ```
 
+## Graph rendering
+
 **SVG**: from any type of points file, converts it to an SVG format and outputs it to stdout.
 
 `classifier svg <any points>`
@@ -58,6 +62,8 @@ $ classifier svg run/points_0.json # dry run
 $ classifier svg dataset_0/annotated.json # dry run, colours annotated points
 $ classifier svg dataset_0/annotated.json > dataset_0/annotated.svg # save output
 ```
+
+## Model validation
 
 **Test**: from a weights file generated with `classifier train`, runs a points file through the
 model and compares the calculated result with the associated annotation to see if it's correct. It
@@ -69,6 +75,8 @@ outputs the log to stdout.
 $ classifier test dataset_0/weights.json dataset_0/annotated.json # through trained dataset
 $ classifier test dataset_0/weights.json dataset_0/annotated.test.json # through unseen dataset
 ```
+
+## Model run
 
 **Run**: from a weights file generated with `classifier train`, runs a directory of points files
 through the model and outputs it to `<directory>/<dataset>/<image>/` along with the SVG of both
