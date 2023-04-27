@@ -3,14 +3,15 @@
 
 A demo to classify points in a graph to a given group using linear regression.
 
-## Build
+## Compilation
 
 **Docker**:
 
 ```bash
 $ docker build -t neuron .
 $ docker run --rm -it -v "$(pwd)/Demo:/mnt" neuron
-neuron% classifier # ...
+neuron% # Demo/ is now mounted to /mnt
+neuron% classifier # <args...>
 ```
 
 **Native (Zig compiler)**:
@@ -20,7 +21,7 @@ $ zig build
 $ ./zig-out/bin/classifier # <args...>
 ```
 
-Or alternatively, use the run step of the build system:
+Or alternatively, use the run step of the Zig build system:
 
 ```bash
 $ zig build run -- # <args...>
@@ -28,23 +29,53 @@ $ zig build run -- # <args...>
 
 # Tests
 
+Unit tests are included for the training implementation:
+
 ```bash
 $ zig build test
 ```
 
 ## Usage
 
-See the `Demo/` subdirectories for more information about the in-/output formats.
+See `Demo/`, `Demo/dataset_0/` and `Demo/run/points_0/` for details about the in-/output formats.
 
-* **Train**: trains from an `annotated.json` dataset and outputs a `weights.json` (W: uses I/O redirection)
-    - Generic interface: `classifier train [dataset.json] > [weights.json]`
-    - Docker: `classifier train /mnt/dataset_0/annotated.json > /mnt/dataset_0/weights.json`
-    - Native: `./zig-out/bin/classifier train ./Demo/dataset_0/annotated.json > ./Demo/dataset_0/weights.json`
-* **Test**: tests the generated `weights.json` on a particular annotated dataset
-    - Generic interface: `classifier test [dataset.json] [weights.json]`
-    - Docker: `classifier test /mnt/dataset_0/annotated.json /mnt/dataset_0/weights.json`
-    - Native: `./zig-out/bin/classifier test ./Demo/dataset_0/annotated.json ./Demo/dataset_0/weights.json`
-* **Run**: runs the generated `weights.json` on a particular non-annotated set of inputs
-    - Generic interface: `classifier run [weights.json] [inputs/]`, written to `inputs/outputs/`
-    - Docker: `classifier run /mnt/dataset_0/weights.json /mnt/inputs/`
-    - Native: `./zig-out/bin/classifier run ./Demo/dataset_0/weights.json ./Demo/inputs/`
+**Train**: from an annotated points (x/y/group) dataset, trains the model using linear regression
+and outputs the model weights to stdout.
+
+`classifier train <annotated points>`
+
+```bash
+$ classifier train dataset_0/annotated.json # dry run
+$ classifier train dataset_0/annotated.json > dataset/weights.json # save output
+```
+
+**SVG**: from any type of points file, converts it to an SVG format and outputs it to stdout.
+
+`classifier svg <any points>`
+
+```bash
+$ classifier svg run/points_0.json # dry run
+$ classifier svg dataset_0/annotated.json # dry run, colours annotated points
+$ classifier svg dataset_0/annotated.json > dataset_0/annotated.svg # save output
+```
+
+**Test**: from a weights file generated with `classifier train`, runs a points file through the
+model and compares the calculated result with the associated annotation to see if it's correct. It
+outputs the log to stdout.
+
+`classifier test <weights> <annotated points>`
+
+```bash
+$ classifier test dataset_0/weights.json dataset_0/annotated.json # through trained dataset
+$ classifier test dataset_0/weights.json dataset_0/annotated.test.json # through unseen dataset
+```
+
+**Run**: from a weights file generated with `classifier train`, runs a directory of points files
+through the model and outputs it to `<directory>/<dataset>/<image>/` along with the SVG of both
+in-/output.
+
+`classifier run <weights> <points directory>`
+
+```bash
+$ classifier run dataset_0/weights.json run/ # output written to run/dataset_0/*/...
+```

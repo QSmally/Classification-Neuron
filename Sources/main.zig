@@ -20,6 +20,7 @@ pub fn main() !void {
 
     if (std.mem.eql(u8, command, "help"))       { try command_help(); }
     else if (std.mem.eql(u8, command, "train")) { try command_train(args[2..]); }
+    else if (std.mem.eql(u8, command, "svg"))   { try command_svg(args[2..]); }
     else if (std.mem.eql(u8, command, "test"))  { try command_test(args[2..]); }
     else if (std.mem.eql(u8, command, "run"))   { try command_run(args[2..]); }
     else std.debug.print("error: {s}: command not found\n", .{ command });
@@ -36,9 +37,22 @@ fn command_help() !void {
         \\  classifier [command] [arguments...] > [output file]
         \\
         \\COMMANDS
-        \\  classifier train [dataset] > [output weights]   trains from an annotated file of points, prints the weights (to store with I/O redirection)
-        \\  classifier test [dataset] [weights]             runs an annotated dataset through a weights file to see training accuracy in stdout
-        \\  classifier run [points] [weights]               runs a non-annotated (directory of) set(s) through a weights file and writes the results
+        \\  train <annotated points>            trains a model from an annotated points file, outputs the weights to stdout
+        \\  svg <any points>                    from an (annotated) points file, converts it to an SVG format and outputs it to stdout
+        \\  test <weights> <annotated points>   runs an annotated points file through a weights file to see training accuracy in stdout
+        \\  run <weights> <points/>             runs a non-annotated directory of points files through a weights file and writes the results in <points>/<dataset>/*/
+        \\
+        \\EXAMPLES
+        \\  $ # see rendered output of an annotation file
+        \\  $ classifier svg /mnt/dataset_0/annotated.json > /mnt/dataset_0/annotated.svg
+        \\  $
+        \\  $ # train and test a dataset
+        \\  $ classifier train /mnt/dataset_0/annotated.json > /mnt/dataset_0/weights.json
+        \\  $ classifier test /mnt/dataset_0/weights.json /mnt/dataset_0/annotated.test.json
+        \\  $
+        \\  $ # run the model through the run/ directory of point files and render their input and output
+        \\  $ # view the result in /mnt/run/dataset_0/*/
+        \\  $ classifier run /mnt/dataset_0/weights.json /mnt/run/
     ;
 
     try stdout.print("{s}\n", .{ message });
@@ -46,7 +60,7 @@ fn command_help() !void {
 
 fn command_train(args: [][]const u8) !void {
     if (args.len != 1)
-        return std.debug.print("error: gave {} args whilst expecting 1: path to annotated dataset\n", .{ args.len });
+        return std.debug.print("error: gave {} args whilst expecting 1: annotated points file\n", .{ args.len });
 
     // Mark: annotations file
     const dataset_string = try cwd.readFileAlloc(allocator, args[0], 4096);
@@ -70,21 +84,28 @@ fn command_train(args: [][]const u8) !void {
     std.debug.print("\nexit: no errors\n", .{});
 }
 
+fn command_svg(args: [][]const u8) !void {
+    if (args.len != 1)
+        return std.debug.print("error: gave {} args whilst expecting 1: points file\n", .{ args.len });
+
+    // Mark: points file
+    const points_string = try cwd.readFileAlloc(allocator, args[1], 4096);
+    var points_parse_stream = std.json.TokenStream.init(points_string);
+    const points = try std.json.parse([]Point, &points_parse_stream, .{ .allocator = allocator });
+
+    allocator.free(points_string);
+    defer allocator.free(points);
+
+    // Mark: conversion
+    // TODO: Output a file conversion to stdout
+}
+
 fn command_test(args: [][]const u8) !void {
     if (args.len != 2)
-        return std.debug.print("error: gave {} args whilst expecting 2: path to annotated dataset, path to weights file\n", .{ args.len });
-
-    // Mark: annotations file
-    const dataset_string = try cwd.readFileAlloc(allocator, args[0], 4096);
-    var dataset_parse_stream = std.json.TokenStream.init(dataset_string);
-    const points = try std.json.parse([]Point, &dataset_parse_stream, .{ .allocator = allocator });
-
-    allocator.free(dataset_string);
-    defer allocator.free(points);
-    std.debug.print("parsed annotation file with {} points\n", .{ points.len });
+        return std.debug.print("error: gave {} args whilst expecting 2: weights model, annotated points\n", .{ args.len });
 
     // Mark: weights file
-    const weights_string = try cwd.readFileAlloc(allocator, args[1], 1024);
+    const weights_string = try cwd.readFileAlloc(allocator, args[0], 1024);
     var weights_parse_stream = std.json.TokenStream.init(weights_string);
     const weights = try std.json.parse([]f64, &weights_parse_stream, .{ .allocator = allocator });
 
@@ -93,8 +114,17 @@ fn command_test(args: [][]const u8) !void {
 
     allocator.free(weights_string);
     defer allocator.free(weights);
-    std.debug.print("parsed weights file (output of 255 means unannotated point)\n", .{});
-    std.debug.print("validating each point with its annotated group...\n", .{});
+    std.debug.print("parsed weights file\n", .{});
+
+    // Mark: annotations file
+    const dataset_string = try cwd.readFileAlloc(allocator, args[1], 4096);
+    var dataset_parse_stream = std.json.TokenStream.init(dataset_string);
+    const points = try std.json.parse([]Point, &dataset_parse_stream, .{ .allocator = allocator });
+
+    allocator.free(dataset_string);
+    defer allocator.free(points);
+    std.debug.print("parsed annotations file with {} points\n", .{ points.len });
+    std.debug.print("validating each point with its annotated group (255 means no annotation)...\n", .{});
 
     // Mark: run through points
     for (points) |point| {
@@ -115,6 +145,6 @@ fn command_test(args: [][]const u8) !void {
 
 fn command_run(args: [][]const u8) !void {
     if (args.len != 2)
-        return std.debug.print("error: gave {} args whilst expecting 2: path to points file or directory, path to weights file\n", .{ args.len });
-    // TODO: Make svg output
+        return std.debug.print("error: gave {} args whilst expecting 2: weights model, points directory\n", .{ args.len });
+    // TODO: Directory walk and do svg output
 }
