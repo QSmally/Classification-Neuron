@@ -1,5 +1,6 @@
 
 const std = @import("std");
+const file = @import("file/file.zig");
 const Point = @import("neuron/point.zig").Point;
 
 const stdout = std.io
@@ -9,30 +10,16 @@ pub const required_args = 2;
 
 pub fn execute(allocator: std.mem.Allocator, args: [][]const u8) !void {
     // Mark: weights file
-    const weights_string = try std.fs
-        .cwd()
-        .readFileAlloc(allocator, args[0], 1024);
-    var weights_parse_stream = std.json.TokenStream.init(weights_string);
-    const weights = try std.json.parse([]f64, &weights_parse_stream, .{ .allocator = allocator });
+    const weights = try file.json([]f64, allocator, args[0]);
+    defer allocator.free(weights);
 
     if (weights.len != 3)
         return std.debug.print("error: weights file must be an array of exactly 3 f64 values, got {}\n", .{ weights.len });
 
-    allocator.free(weights_string);
-    defer allocator.free(weights);
-    std.debug.print("parsed weights file\n", .{});
-
     // Mark: annotations file
-    const dataset_string = try std.fs
-        .cwd()
-        .readFileAlloc(allocator, args[1], 4096);
-    var dataset_parse_stream = std.json.TokenStream.init(dataset_string);
-    const points = try std.json.parse([]Point, &dataset_parse_stream, .{ .allocator = allocator });
-
-    allocator.free(dataset_string);
+    const points = try file.json([]Point, allocator, args[1]);
     defer allocator.free(points);
-    std.debug.print("parsed annotations file with {} points\n", .{ points.len });
-    std.debug.print("validating each point with its annotated group (255 means no annotation)...\n", .{});
+    std.debug.print("annotations file with {} points, start...\n", .{ points.len });
 
     // Mark: run through points
     for (points) |point| {
@@ -48,5 +35,5 @@ pub fn execute(allocator: std.mem.Allocator, args: [][]const u8) !void {
             message });
     }
 
-    std.debug.print("\nexit: no errors\n", .{});
+    std.debug.print("exit: no errors\n", .{});
 }

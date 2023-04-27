@@ -14,7 +14,7 @@ pub fn build(b: *std.build.Builder) void {
     const runs = b.step("run", "Execute the classifier CLI binary");
     runs.dependOn(&runc.step);
 
-    const testc = b.addTest("Sources/trainer.zig");
+    const testc = b.addTest("Sources/neuron/trainer.zig");
     const tests = b.step("test", "Tests the trainer component");
     tests.dependOn(&testc.step);
 }
