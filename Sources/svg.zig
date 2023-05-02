@@ -21,7 +21,7 @@ pub fn execute(allocator: std.mem.Allocator, args: [][]const u8) !void {
 }
 
 pub fn generate(points: *const []Point, output: std.fs.File.Writer) !void {
-    try output.print("<svg xmlns=\"http://www.w3.org/2000/svg\" background-color=\"white\">\n", .{});
+    try output.print("<svg xmlns=\"http://www.w3.org/2000/svg\" background-color=\"white\" viewBox=\"0 0 720 720\" width=\"auto\" height=\"auto\">\n", .{});
     try output.print("<rect width=\"{}\" height=\"{}\" fill=\"white\"></rect>\n", .{ width + 20, height + 20 });
 
     for (points.*) |point| {
