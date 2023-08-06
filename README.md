@@ -3,6 +3,8 @@
 
 A demo to classify points in a graph to a given group using linear regression.
 
+Commit HEAD compiled with Zig `0.10.1`.
+
 ## Compilation
 
 **Docker**:
